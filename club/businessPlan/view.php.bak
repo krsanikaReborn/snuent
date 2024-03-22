@@ -1,0 +1,84 @@
+<?php
+		// URL 접근 거부
+		If(!Defined('webSite')) Header('Location: /');
+
+		// 신청서 조회
+		$DB->setProcName('SP_WEB_NON_MAJOR_BUSINESS_PLAN_SELECT');
+		$DB->bind_param('P_YEAR', 				$YEAR,						_VARCHAR,	4,			_PARAM_IN);
+		$DB->bind_param('P_HAGGI', 			$HAGGI,					_VARCHAR,	6,			_PARAM_IN);
+		$DB->bind_param('P_TEAM_CD', 		$TEAM_CD,				_VARCHAR,	10,		_PARAM_IN);
+		$stat = false;
+		If ($DB->ExecuteProc()) {
+			$Result = $DB->get_fetch_assoc();
+
+			If($Result) {
+				$stat = true;
+
+				$ACTION_PLAN			= $Result[0]['ACTION_PLAN'];
+				$EXPECTED_RESULT 	= $Result[0]['EXPECTED_RESULT'];
+				$STATUS 					= $Result[0]['STATUS'];
+
+				$CREATE_DT 				= $Result[0]['CREATE_DT'];
+			}
+		}
+		If($stat === false) location(2, '사업계획서 조회에 실패하였습니다.', '/');
+
+		Switch($STATUS) {
+			Case '승인' : $STATUS_CLASS = 'stat1'; Break;
+			Case '비승인' : $STATUS_CLASS = 'stat2'; Break;
+			Case '미제출' : $STATUS_CLASS = 'stat3'; Break;
+			Default : $STATUS_CLASS = 'stat4';
+		}
+?>
+						<div class="ofh hfont black margin_b_10">
+							<p class="fright"><b>상태</b> : <span class="stat <?php Echo $STATUS_CLASS; ?>"><?php Echo $STATUS; ?></span></p>
+						</div>
+
+						<div class="table_view2">
+							<table border="0" cellspacing="0" cellpadding="0">
+								<colgroup>
+									<col class="w15">
+									<col class="w16">
+									<col class="w15">
+									<col class="w16">
+									<col class="w15">
+									<col class="w23">
+								</colgroup>
+								<tbody>
+									<tr>
+										<th colspan="6">수강생 정보</th>
+									</tr>
+									<tr>
+										<th>학번</th>
+										<td><?php Echo $USER_NO; ?></td>
+										<th>성명</th>
+										<td><?php Echo $REG_NAME; ?></td>
+										<th>학과/학년</th>
+										<td><?php Echo $REG_MAJOR; ?> / <?php Echo $REG_GRADE; ?>학년</td>
+									</tr>
+								</tbody>
+							</table>
+						</div>
+
+						<div class="margin_t_20 margin_b_10 table_view2">
+							<table border="0" cellspacing="0" cellpadding="0">
+								<colgroup>
+									<col class="w25">
+									<col class="w75">
+								</colgroup>
+								<tbody>
+									<tr>
+										<th>동아리명</th>
+										<td><?php Echo $CLUB_NM; ?></td>
+									</tr>
+									<tr>
+										<th>1. 창업활동 실행계획<br />(일정 및 상세내역 포함)</th>
+										<td><?php Echo nl2br(HtmlSpecialChars($ACTION_PLAN)); ?></td>
+									</tr>
+									<tr>
+										<th>2. 기대성과<br />(정량적, 정성적 성과)</th>
+										<td><?php Echo nl2br(HtmlSpecialChars($EXPECTED_RESULT)); ?></textarea></td>
+									</tr>
+								</tbody>
+							</table>
+						</div>

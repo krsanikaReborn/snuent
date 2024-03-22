@@ -1,0 +1,184 @@
+<?php
+	Header("Content-Type: text/html; charset=UTF-8");
+
+	Define("__ROOT__", $_SERVER['DOCUMENT_ROOT']);
+	Define(webSite, '남서울*%*창업');
+	Define(webPage, 'sub');
+	Define(webBoard, 'board');
+
+	Require_Once __ROOT__ . '/inc/DBConnection.php';
+	mb_internal_encoding('UTF-8');
+
+	// 창업동아리 사업계획서
+	$_GET['code'] = '040500';
+
+	If(!IsSet($_SESSION['HOME']['USER_NO']) || $_SESSION['HOME']['USER_NO'] == '') location(2, '로그인 후 이용하실 수 있습니다.', '/member/login.php');
+
+	// 비전공자 개인정보 수집 활용 동의 체크??? 하는거??
+	// 개인정보 수집 활용 동의 체크
+	/*
+	$DB->setProcName('SP_WEB_USER_AGREE_CHECK');
+	$DB->bind_param('P_USER_NO', 		$_SESSION['HOME']['USER_NO'],			_VARCHAR,	20,		_PARAM_IN);
+	$DB->bind_param('P_KEY_TYPE', 		'user',														_VARCHAR,	20,		_PARAM_IN);
+	$DB->bind_param('P_DOC_TYPE', 		'plan',														_VARCHAR,	20,		_PARAM_IN);
+	
+	If ($DB->ExecuteProc()) {
+		$Result2 = $DB->get_fetch_assoc();
+
+		If ($Result2) {
+			$AGREE_YN = $Result2[0]['AGREE_YN'];
+			$AGREE_DT = $Result2[0]['AGREE_DT'];
+		}
+	}
+
+	// 동의하고 오세요~
+	If($AGREE_YN == 'Y' && !$AGREE_DT) {
+		location(2, '', '/mypage/agree/');
+	}
+	*/
+
+	Require_Once __ROOT__ . '/inc/code.php';
+?>
+<!DOCTYPE html>
+<html lang="ko">
+	<head>
+<?php
+	// HTML Header
+	Require_Once __ROOT__.'/inc/html.php';
+?>
+		<link rel="stylesheet" type="text/css" media="all" href="/res/css/modules/jquery-ui/jquery-ui.min.css" />
+		<link rel="stylesheet" type="text/css" media="all" href="/res/css/modules/jquery-ui/jquery-ui.theme.min.css" />
+		<link rel="stylesheet" type="text/css" media="all" href="/res/css/parsley.css" />
+		<script type="text/javascript" src="/res/js/modules/jquery-ui/jquery-ui.min.js"></script>
+		<script type="text/javascript" src="/res/js/validator/parsley.remote.js"></script>
+	</head>
+	<body>
+		<div id="commonLayout">
+<?php
+	// Header
+	Require_Once __ROOT__.'/inc/head.php';
+?>
+			<div id="subVisual">
+				<p><b>남서울대학교 <span class="lightseagreen">창업교육센터</span></b></p>
+			</div>
+			<div id="subLayout" class="ofh flefts">
+<?php
+	// Sub Navigation
+	Require_Once __ROOT__.'/inc/navi_sub.php';
+?>
+				<div id="subContent">
+					<div>
+						<h3><?php Echo $_CODE['navi_end']; ?></h3>
+						<p class="bfont">창업교육센터는 남서울대학교의 숭고한 정신을 깊이 새기어 건강한 사회, 더 행복한 세상을 만들어 가겠습니다.</p>
+						<p class="navi"><?php Echo $_CODE['navi']; ?></p>
+					</div>
+<?php
+	// 수강생정보, 일정, 팀구성 및 팀장 여부, 사업계획서 등록 여부 조회
+	$DB->setProcName('SP_WEB_NON_MAJOR_BUSINESS_PLAN_INFO');
+	$DB->bind_param('P_USER_NO', 		$_SESSION['HOME']['USER_NO'],			_VARCHAR,	20,		_PARAM_IN);
+	$stat = false;
+	If ($DB->ExecuteProc()) {
+		$Result = $DB->get_fetch_assoc();
+
+		If($Result) {
+			$stat = true;
+
+			// 비즈니스 로직단에서도 아래 변수 사용함
+			$USER_NO 				= $Result[0]['USER_NO'];						// 학번
+
+			$YEAR						= $Result[0]['YEAR'];								// 진행 년도
+			$HAGGI 					= $Result[0]['HAGGI'];							// 진행 학기
+			$TEAM_CD				= $Result[0]['TEAM_CD'];						// 팀 코드
+
+			$CLUB_NM				= $Result[0]['CLUB_NM'];						// 팀 명칭
+			
+			$REG_NAME				= $Result[0]['REG_NAME'];					// 성명
+			$REG_GRADE			= $Result[0]['REG_GRADE'];					// 학년
+			$REG_MAJOR			= $Result[0]['REG_MAJOR'];					// 학과
+
+			$SCHEDULE_YN		= $Result[0]['SCHEDULE_YN'];				// 일정 존재여부
+			$TEAM_YN				= $Result[0]['TEAM_YN'];						// 팀 구성여부
+			$LEADER_YN			= $Result[0]['LEADER_YN'];					// 팀장여부
+			$PLAN_YN				= $Result[0]['PLAN_YN'];						// 사업계획서 등록여부
+		}
+	}
+	If($stat === false) location(2, '사용자 정보를 찾을 수 없습니다.', '/');
+?>
+					<div class="middleline justify ofh">
+<?php
+	$stat = true;
+	$teamInfo = false;
+	// 상태를 기준으로 MODE 를 변경한다.
+	$MODE = IsSet($_POST['MODE']) ? $_POST['MODE'] : Null;
+
+	// 사업계획서가 있다면, 뷰페이지를 호출한다.
+	If($PLAN_YN == 'Y') {
+		$MODE = 'V';
+	} Else {			// 사업계획서가 없다면,
+		If($SCHEDULE_YN != 'Y') {		// 일정 등록 안되어 있음.
+			$stat = false;
+			$INFO_MESSAGE = '등록된 일정이 없습니다.';
+		}
+
+		// 팀 구성 안된 경우
+		If($stat && $TEAM_YN != 'Y') {
+			$stat = false;
+			$INFO_MESSAGE = '창업동아리 멤버가 아닙니다.<br />동아리등록신청 후 팀장이 신청할 수 있습니다.';
+		}
+
+		// 팀 구성된 경우
+		If($stat && $TEAM_YN == 'Y') {
+			If($LEADER_YN != 'Y') {		// 팀장이 아닌 경우
+				$stat = false;
+				$teamInfo = true;		// info.php 페이지에서 팀 구성 조회 여부
+				$INFO_MESSAGE = '창업동아리 사업계획서는 팀장이 대표로 신청할 수 있습니다.<br />팀의 구성원은 아래의 팀 구성표를 참고하십시오.';
+			} Else {
+				// 등록신청서가 없고, 일정기간에 포함되고, 팀구성이 되어 있고, 팀장인 경우 신청가능 ^^
+				If(!IsSet($MODE)) $MODE = 'W';
+			}
+		}
+	}
+
+	If(!$stat) $MODE = Null;		// stat이 false이면 info.php 를 호출한다.
+
+	Switch ( $MODE ) {		// W: 신청폼, V: 신청내역, M: 수정폼, WR: 등록 및 수정 로직, DR: 삭제 로직
+		Case 'W' 		:
+								$includePath 	= 	DIRNAME(__FILE__) . '/write.php';
+								Break;
+		Case 'V' 		:
+								$includePath 	= 	DIRNAME(__FILE__) . '/view.php';
+								Break;
+/*
+		Case 'M' 		:
+								$includePath 	= 	DIRNAME(__FILE__) . '/write.php';
+								Break;
+*/
+		Case 'WR'		:
+								$includePath 	= 	DIRNAME(__FILE__) . '/proc.php';
+								Break;
+/*
+		Case 'MR'		:
+								$includePath 	= 	DIRNAME(__FILE__) . '/proc.php';
+								Break;
+
+		Case 'DR'		:
+								$includePath 	= 	DIRNAME(__FILE__) . '/proc.php';
+								Break;
+*/
+		Default 			:
+								$includePath 	= 	DIRNAME(__FILE__) . '/info.php';
+	}
+
+	If( File_Exists($includePath) ) Include_Once $includePath;
+	Else location(2, '스킨설정오류입니다. 관리자에게 문의하십시오.', '/');
+?>
+					</div>
+				</div>
+			</div>
+<?php
+	// Footer
+	Require_Once __ROOT__ . '/inc/foot.php';
+?>
+		</div>
+	</body>
+</html>

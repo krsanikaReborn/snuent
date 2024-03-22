@@ -1,0 +1,77 @@
+<?php
+	// URL 접근 거부
+	If(!Defined('webSite')) Header('Location: /');
+?>
+					<div class="alert alert-info">
+						<?php Echo $INFO_MESSAGE; ?>
+					</div>
+<?php
+	// 팀멤버이며, 팀장이 아니면 팀원 목록을 보여준다.
+	If($teamInfo === true) {
+		$DB->setProcName('SP_WEB_NON_MAJOR_TEAM_INFO');
+		$DB->bind_param('P_YEAR',		 			$YEAR,															_VARCHAR,	4,			_PARAM_IN);
+		$DB->bind_param('P_HAGGI',		 			$HAGGI,														_VARCHAR,	6,			_PARAM_IN);
+		$DB->bind_param('P_TEAM_CD',		 	$TEAM_CD,													_VARCHAR,	10,		_PARAM_IN);
+		$stat = false;
+?>
+					<div class="table_view2 margin_t_10">
+						<table border="0" cellspacing="0" cellpadding="0">
+							<colgroup>
+								<col class="w12" />
+								<col class="w20" />
+								<col class="w15" />
+								<col class="w15" />
+								<col class="w20">
+								<col class="w8" />
+								<col class="w8">
+							</colgroup>
+							<thead>
+								<tr>
+									<th>학번</th>
+									<th>성명</th>
+									<th>학과</th>
+									<th>학년</th>
+									<th>비고</th>
+								</tr>
+							</thead>
+							<tbody>
+<?php
+		If ($DB->ExecuteProc()) {
+			$stat = true;
+			$Result = $DB->get_fetch_assoc();
+
+			If($Result) {
+				$isLeader = false;
+				Foreach($Result AS $LIST) {
+					If($LIST['LEADER_YN'] == 'Y') $isLeader = true;
+?>
+								<tr<?php If($LIST['LEADER_YN'] == 'Y') Echo ' style="background-color:#ddd; font-weight:bold;"'; ?>>
+									<td class="text-center"><?php Echo $LIST['USER_NO']; ?></td>
+									<td class="text-center"><?php Echo $LIST['REG_NAME']; ?></td>
+									<td class="text-center"><?php Echo $LIST['REG_MAJOR']; ?></td>
+									<td class="text-center"><?php Echo $LIST['REG_GRADE']; ?></td>
+									<td class="text-center"><?php Echo ($LIST['LEADER_YN'] == 'Y') ? '팀장' : '팀원'; ?></td>
+								</tr>
+<?php
+				}
+			}
+		}
+		If (!$stat) {
+?>
+								<tr><td style="height:40px" colspan="4">팀 조회에 실패하였습니다. 관리자에게 문의하십시오.</td></tr>
+<?php
+		}
+?>
+							</tbody>
+						</table>
+					</div>
+<?php
+		If($stat && !$isLeader){
+?>
+					<div class="alert alert-danger margin_t_10">
+						지정된 팀장이 없습니다.
+					</div>
+<?php
+		}
+	}
+?>

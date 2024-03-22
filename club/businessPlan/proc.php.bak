@@ -1,0 +1,51 @@
+<?php
+	// URL 접근 거부
+	If(!Defined('webSite')) Header('Location: /');
+
+	/********************************************************************************************************
+	* POST 처리
+	********************************************************************************************************/
+	$Valid = New Validation();
+	$Form = New form();
+
+	$_POST = $Form->clean($Valid->validate('', $_POST, Array('filter' => 'trim')));
+
+	// index.php 에서 조회한 값
+	$REG_HAGBEON			= $_SESSION['HOME']['USER_NO'];
+	$REG_NAME					= $REG_NAME;
+	$REG_MAJOR				= $REG_MAJOR;
+	$REG_GRADE				= $REG_GRADE;
+	$STATUS						= '제출';
+
+	Try {
+		$ACTION_PLAN					= $Valid->validate('실행계획',		$_POST['ACTION_PLAN'],					Array('validate' => 'required'));
+		$EXPECTED_RESULT			= $Valid->validate('기대성과',		$_POST['EXPECTED_RESULT'],			Array('validate' => 'required'));
+	} Catch (Exception $e) {
+		location(2, $e->getMessage(), '/club/businessPlan/');
+	}
+
+	$CREATE_ID		= 'HOME_'.$_SESSION['HOME']['USER_NO'];
+
+	$DB->setProcName('SP_WEB_NON_MAJOR_BUSINESS_PLAN_SAVE');
+	$DB->bind_param('P_YEAR',								$YEAR,								_VARCHAR,	4,			_PARAM_IN);
+	$DB->bind_param('P_HAGGI',								$HAGGI,							_VARCHAR,	6,			_PARAM_IN);
+	$DB->bind_param('P_TEAM_CD',						$TEAM_CD,						_VARCHAR,	10,		_PARAM_IN);
+	$DB->bind_param('P_ACTION_PLAN',					$ACTION_PLAN,				_VARCHAR,	8000,	_PARAM_IN);
+	$DB->bind_param('P_EXPECTED_RESULT',		$EXPECTED_RESULT,		_VARCHAR,	8000,	_PARAM_IN);
+	$DB->bind_param('P_STATUS',							$STATUS,						_VARCHAR,	10,		_PARAM_IN);
+	$DB->bind_param('P_REG_HAGBEON',				$REG_HAGBEON,				_VARCHAR,	20,		_PARAM_IN);
+	$DB->bind_param('P_REG_NAME',						$REG_NAME,					_VARCHAR,	30,		_PARAM_IN);
+	$DB->bind_param('P_REG_MAJOR',					$REG_MAJOR,					_VARCHAR,	100,		_PARAM_IN);
+	$DB->bind_param('P_REG_GRADE',					$REG_GRADE,					_VARCHAR,	3,			_PARAM_IN);
+	$DB->bind_param('P_CREATE_ID',						$CREATE_ID,					_VARCHAR,	50,		_PARAM_IN);
+	$DB->bind_param('V_RETURN_NO',					'',										_VARCHAR,	20,		_PARAM_OUT);
+
+	If($DB->ExecuteProc()) {
+		$RETURN_NO = $DB->output['V_RETURN_NO'];
+		location(2, '사업계획서가 제출되었습니다.', '/club/businessPlan/');
+	} Else {
+		location(2, HtmlSpecialChars($DB->get_error()), '/club/businessPlan/');
+	}
+
+	Exit;
+?>

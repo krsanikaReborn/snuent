@@ -1,0 +1,79 @@
+<?php
+	// URL 접근 거부
+	If(!Defined('webSite')) Header('Location: /');
+?>
+						<form name="businessPlanForm" id="businessPlanForm" method="post" action="?" kongjang-validate>
+							<input type="hidden" name="MODE" id="MODE" value="<?php Echo $MODE; ?>R" />
+
+                            <div class="table_view2">
+                                <table border="0" cellspacing="0" cellpadding="0">
+                                    <colgroup>
+                                        <col class="w15">
+                                        <col class="w16">
+                                        <col class="w15">
+                                        <col class="w16">
+                                        <col class="w15">
+                                        <col class="w23">
+                                    </colgroup>
+                                    <tbody>
+										<tr>
+											<th colspan="6">신청자 정보</th>
+										</tr>
+										<tr>
+											<th>학번</th>
+											<td><?php Echo $USER_NO; ?></td>
+											<th>성명</th>
+											<td><?php Echo $REG_NAME; ?></td>
+											<th>학과/학년</th>
+											<td><?php Echo $REG_MAJOR; ?> / <?php Echo $REG_GRADE; ?>학년</td>
+										</tr>
+									</tbody>
+								</table>
+							</div>
+
+                            <div class="margin_t_20 margin_b_10 table_view2">
+                                <table border="0" cellspacing="0" cellpadding="0">
+                                    <colgroup>
+                                        <col class="w25">
+                                        <col class="w75">
+                                    </colgroup>
+                                    <tbody>
+                                        <tr>
+                                            <th>동아리명</th>
+                                            <td><?php Echo $CLUB_NM; ?></td>
+                                        </tr>
+                                        <tr>
+                                            <th>1. 창업활동 실행계획<br />(일정 및 상세내역 포함)</th>
+                                            <td><textarea name="ACTION_PLAN" id="ACTION_PLAN" class="w99" style="height:300px;" ></textarea></td>
+                                        </tr>
+                                        <tr>
+                                            <th>2. 기대성과<br />(정량적, 정성적 성과)</th>
+                                            <td><textarea name="EXPECTED_RESULT" id="EXPECTED_RESULT" class="w99" style="height:300px;" ></textarea></td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+
+							<div class="center margin_t_20">
+								<input class="submit_1" name="mode" type="submit" onclick="return formSubmit(this.form, this.value);" value="제출" />
+								<input class="submit" type="reset" value="취소">
+							</div>
+						</form>
+						
+						<script>
+							function formSubmit(frm, mode) {
+								var msg = '';
+								if(frm.ACTION_PLAN.value == '') {
+									alert('창업활동 실행계획을 입력하세요!');
+									frm.ACTION_PLAN.focus();
+									return false;
+								}
+								if(frm.EXPECTED_RESULT.value == '') {
+									alert('기대성과를 입력하세요!');
+									frm.EXPECTED_RESULT.focus();
+									return false;
+								}
+								if(mode == '제출') msg = '제출 후 수정하실 수 없습니다.\r\n';
+								if(!confirm(msg + mode + '하시겠습니까?')) return false;
+							}
+						</script>
